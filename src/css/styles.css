@@ -12,3 +12,12 @@ html, body {
 .rbc-calendar {
     height: 100%;
 }
+
+.fab {
+    border-radius: 100%;
+    bottom: 25px;
+    font-size: 30px;
+    padding: 18px;
+    position: fixed;
+    right: 25px;
+}
