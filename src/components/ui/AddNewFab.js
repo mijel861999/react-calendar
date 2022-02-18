@@ -13,10 +13,13 @@ export const AddNewFab = () => {
 
   return(
     <button 
+      style={{
+        cursor: "pointer"
+      }}
       className="btn btn-primary fab"
       onClick={ handleOpenModal }
     >
-      <i className="fas fa-plus"></i> 
+      <i  className="fas fa-plus"></i> 
     </button>
   )
 }

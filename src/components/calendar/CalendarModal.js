@@ -1,5 +1,5 @@
 //LIBRERÍAS
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import Modal from 'react-modal'
 import DateTimePicker from 'react-datetime-picker';
@@ -11,6 +11,7 @@ import '../../css/modal.css';
 
 //Actions
 import { uiCloseModal } from '../../actions/ui';
+import { eventStartAddnew, eventClearActiveEvent, startEventUpdated } from '../../actions/events';
 
 const customStyles = {
   content: {
@@ -30,23 +31,35 @@ const now = moment().minutes(0).seconds(0).add(1, 'hours');
 //const endHour = moment().minutes(0).seconds(0).add(2, 'hours');
 const endHour = now.clone().add(1, 'hours');
 
+const initEvent= {
+  title: 'Evento',
+  notes: '',
+  start: now.toDate(),
+  end: endHour.toDate()
+}
+
 export const CalendarModal = () => {
 
-  const dispatch = useDispatch();
   const { modalOpen } = useSelector( state => state.ui )
+  const { activeEvent } = useSelector( state => state.calendar )
+  const dispatch = useDispatch();
 
   const [ dateStart, setDateStart ] = useState( now.toDate() );
   const [ dateEnd, setDateEnd ] = useState( endHour.toDate() );
   const [ titleValid, setTitleValid ] = useState( true );
 
-  const [ formValues, setFormValues ] = useState({
-    title: 'Evento',
-    notes: 'Hola',
-    start: now.toDate(),
-    end: endHour.toDate(),
-  })
+  const [ formValues, setFormValues ] = useState(initEvent);
 
   const { notes, title, start, end } = formValues;
+
+  useEffect( ()=> {
+    if( activeEvent ) {
+      setFormValues( activeEvent );
+    }else {
+      setFormValues( initEvent );
+    }
+  }, [activeEvent, setFormValues])
+  //Si uno de las dos dependencias cambian, se ejecutará el código
 
   const handleInputChange = ({ target }) => {
     setFormValues({
@@ -57,7 +70,9 @@ export const CalendarModal = () => {
 
 
   const closeModal = () => {
-    dispatch( uiCloseModal() )  
+    dispatch( uiCloseModal() ); 
+    dispatch( eventClearActiveEvent() );
+    setFormValues( initEvent );
   }
 
   const handleStartDateChange = (e) => {
@@ -90,8 +105,14 @@ export const CalendarModal = () => {
     if( title.trim().length < 2 ){
       return setTitleValid(false);
     }
-
+    
     //TODO: realizar grabación en la base de datos
+    if( activeEvent ) {
+      dispatch( startEventUpdated(formValues) );
+    } else {
+      dispatch( eventStartAddnew( formValues ));
+    }
+    
     
     setTitleValid( true );
     closeModal();
@@ -107,7 +128,7 @@ export const CalendarModal = () => {
       className="modal"
       overlayClassName="modal-fondo"
     >
-      <h1> Nuevo evento </h1>
+      <h1> { (activeEvent)? 'Editar evento': 'Nuevo evento' } </h1>
       <hr />
       <form 
         className="container"

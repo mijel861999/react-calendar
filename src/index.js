@@ -7,6 +7,7 @@ import { CalendarApp } from './CalendarApp';
 //CSS
 import './css/styles.css';
 
+
 ReactDOM.render(
     <CalendarApp />,
   document.getElementById('root')

@@ -1,14 +1,15 @@
-import React, { useState } from 'react'; 
+import React, { useEffect, useState } from 'react'; 
 
 //Librerías
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/es';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 //Components
 import { Navbar } from '../ui/Navbar';
 import { AddNewFab } from '../ui/AddNewFab';
+import { DeleteEventFab } from '../ui/DeleteEventFab';
 import { CalendarEvent } from '../calendar/CalendarEvent';
 import { CalendarModal } from '../calendar/CalendarModal';
 
@@ -20,14 +21,15 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 ///Actions
 import { uiOpenModal } from '../../actions/ui';
-import { eventSetActive } from '../../actions/events';
+import { eventSetActive, eventClearActiveEvent, eventStartLoadin } from '../../actions/events';
 
 //configuraciones de moment
 moment.locale('es');
 
 const localizer = momentLocalizer( moment ); //or globallizeLocalizer
 
-const events = [{
+/*
+const eventsExample = [{
   title: 'Cum del jefe',
   start: moment().toDate(),
   end: moment().add( 2, 'hours' ).toDate(),
@@ -38,20 +40,26 @@ const events = [{
     name: 'Miguel',
   }
 }]
+*/
 
 export const CalendarScreen = () => {
 
   const dispatch = useDispatch();
+
+  const { events, activeEvent } = useSelector( state => state.calendar );
+  const { uid } = useSelector( state => state.auth );
   const [ lastView, setLastView ] = useState( localStorage.getItem('lastView') || 'month' );
-  
+
+  useEffect(()=>{
+    dispatch(eventStartLoadin() )
+  }, [ dispatch ]);
 
   const onDoubleClick = ( e ) => {
     dispatch( uiOpenModal() )
   }
   
   const onSelectEvent = ( e ) => {
-    console.log(e); 
-    dispatch( eventSetActive(events) );
+    dispatch( eventSetActive(e) );
   }
 
   const onViewChange = ( e ) => {
@@ -59,10 +67,15 @@ export const CalendarScreen = () => {
     localStorage.setItem('lastView', e);
   }
 
+  const onSelectSlot = (e) => {
+    //TODO: Hacer creación de pedido al presionar 
+    dispatch(eventClearActiveEvent());
+  }
+
   const eventStyleGetter = ( event, start, end, isSelected ) => {
-    
+
     const style = {
-      backgroundColor: '#367CF7',
+      backgroundColor: (uid === event.user._id ) ?  '#367CF7' : '#465660',
       borderRadius: '0px',
       opacity: 0.6,
       display: 'block',
@@ -88,13 +101,23 @@ export const CalendarScreen = () => {
         onDoubleClickEvent={ onDoubleClick }
         onSelectEvent={ onSelectEvent }
         onView={ onViewChange }
+        onSelectSlot={ onSelectSlot }
+        selectable={ true }
         view={ lastView }
         components={{
           event: CalendarEvent
         }}
       />
-
+      
       <AddNewFab />
+
+      
+      {
+        activeEvent &&
+          <DeleteEventFab />
+      }
+      
+      
       <CalendarModal /> 
     </div>
   )
